@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Darwin"/>
+<meta name="theme-color" content="#0b1218"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" href="icon.svg" type="image/svg+xml"/>
+<title>Darwin</title>
+<style>
+  :root {
+    --bg: #0b1218; --panel: #121b24; --ink: #e8eef4; --muted: #8a9aab;
+    --gold: #c9a227; --gold-dim: #8a7018; --user: #1e3a4f; --bot: #162029;
+    --line: #243040; --danger: #c45c5c; --ok: #3d9a6a;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; padding-top: var(--safe-t); }
+  header {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--line); background: var(--panel); flex-shrink: 0;
+  }
+  header .mark {
+    width: 36px; height: 36px; border-radius: 10px; background: #0d1520;
+    border: 1.5px solid var(--gold); display: grid; place-items: center;
+    color: var(--gold); font-family: Georgia, serif; font-weight: 700; font-size: 18px;
+  }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.02em; }
+  header .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  header .status { margin-left: auto; font-size: 11px; color: var(--muted); }
+  header .status.on { color: var(--ok); }
+  #log {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 16px 14px 8px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg { max-width: 88%; padding: 10px 14px; border-radius: 16px; line-height: 1.45; font-size: 15px;
+    white-space: pre-wrap; word-break: break-word; }
+  .msg.user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: var(--bot); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .msg .tag {
+    display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px;
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    background: #0b1218; color: var(--gold); border: 1px solid var(--gold-dim);
+  }
+  .msg.sys { align-self: center; background: transparent; color: var(--muted); font-size: 12px; text-align: center; max-width: 95%; }
+  .typing { opacity: 0.7; font-style: italic; }
+  #composer {
+    display: flex; gap: 8px; padding: 10px 12px calc(10px + var(--safe-b));
+    border-top: 1px solid var(--line); background: var(--panel); flex-shrink: 0;
+  }
+  #composer input {
+    flex: 1; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    border-radius: 22px; padding: 12px 16px; font-size: 16px; outline: none;
+  }
+  #composer input:focus { border-color: var(--gold-dim); }
+  #composer button {
+    border: none; background: var(--gold); color: #0b1218; font-weight: 700;
+    border-radius: 22px; padding: 0 18px; font-size: 15px; min-width: 72px;
+  }
+  #composer button:disabled { opacity: 0.45; }
+  #enroll {
+    position: fixed; inset: 0; background: rgba(5,8,12,0.92); display: none;
+    align-items: center; justify-content: center; padding: 24px; z-index: 20;
+  }
+  #enroll.open { display: flex; }
+  #enroll .card {
+    width: 100%; max-width: 360px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; padding: 24px 20px; text-align: center;
+  }
+  #enroll h2 { margin: 0 0 6px; font-size: 20px; color: var(--gold); font-family: Georgia, serif; }
+  #enroll p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+  #enroll input {
+    width: 100%; text-align: center; letter-spacing: 0.35em; font-size: 22px; font-weight: 700;
+    padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  #enroll button {
+    width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--gold);
+    color: #0b1218; font-weight: 700; font-size: 16px;
+  }
+  #enroll .err { color: var(--danger); font-size: 12px; min-height: 18px; margin-bottom: 8px; }
+  #install-hint {
+    display: none; margin: 0 14px 8px; padding: 10px 12px; border-radius: 12px;
+    background: #15202b; border: 1px dashed var(--gold-dim); color: var(--muted); font-size: 12px; line-height: 1.4;
+  }
+  #install-hint.show { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">D</div>
+  <div>
+    <h1>Darwin</h1>
+    <div class="sub">Private chat · brain-tagged</div>
+  </div>
+  <div class="status" id="status">…</div>
+</header>
+<div id="install-hint">To install: Safari Share → <b>Add to Home Screen</b> → Add. Then open the Darwin icon.</div>
+<div id="log" aria-live="polite"></div>
+<form id="composer" autocomplete="off">
+  <input id="input" type="text" enterkeyhint="send" placeholder="Ask Darwin…" maxlength="4000" disabled/>
+  <button type="submit" id="send" disabled>Send</button>
+</form>
+
+<div id="enroll">
+  <div class="card">
+    <h2>D.A.R.W.I.N.</h2>
+    <p>Enter the one-time enroll code Brandon gave you. This device stays private — no open chat endpoint.</p>
+    <div class="err" id="enroll-err"></div>
+    <input id="enroll-code" inputmode="text" maxlength="8" placeholder="········" autocomplete="one-time-code"/>
+    <button type="button" id="enroll-btn">Enroll this iPhone</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const API = 'https://crgbnqdxlilslabyaugn.supabase.co/functions/v1/darwin-chat';
+  const history = [];
+  const TOKEN_KEY = 'darwin_chat_session_v1';
+  const log = document.getElementById('log');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const form = document.getElementById('composer');
+  const statusEl = document.getElementById('status');
+  const enroll = document.getElementById('enroll');
+  const enrollErr = document.getElementById('enroll-err');
+  const enrollCode = document.getElementById('enroll-code');
+  const enrollBtn = document.getElementById('enroll-btn');
+  const installHint = document.getElementById('install-hint');
+
+  let token = localStorage.getItem(TOKEN_KEY) || '';
+  let busy = false;
+
+  function add(role, text, tag) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    d.textContent = text;
+    if (tag) {
+      const t = document.createElement('div');
+      t.className = 'tag';
+      t.textContent = tag;
+      d.appendChild(document.createElement('br'));
+      d.appendChild(t);
+    }
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  }
+
+  function setAuthed(ok) {
+    input.disabled = !ok;
+    sendBtn.disabled = !ok;
+    statusEl.textContent = ok ? 'enrolled' : 'locked';
+    statusEl.classList.toggle('on', ok);
+    enroll.classList.toggle('open', !ok);
+    if (ok) input.focus();
+  }
+
+  async function api(path, body, auth) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (auth && token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch(API + path, { method: 'POST', headers, body: JSON.stringify(body || {}) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(j.error || ('http_' + r.status)), { status: r.status, body: j });
+    return j;
+  }
+
+  async function doEnroll() {
+    enrollErr.textContent = '';
+    const code = (enrollCode.value || '').trim().toUpperCase();
+    if (!/^[A-F0-9]{8}$/.test(code)) { enrollErr.textContent = 'Code is 8 hex characters.'; return; }
+    enrollBtn.disabled = true;
+    try {
+      const j = await api('/enroll', { code, deviceLabel: 'iphone-14-pro-max' }, false);
+      token = j.token;
+      localStorage.setItem(TOKEN_KEY, token);
+      setAuthed(true);
+      add('sys', 'Device enrolled. Ask Darwin anything. Answers are tagged cloud.');
+    } catch (e) {
+      enrollErr.textContent = e.status === 401 ? 'Wrong code.' : (e.message || 'Enroll failed');
+    } finally {
+      enrollBtn.disabled = false;
+    }
+  }
+
+  async function doChat(text) {
+    if (busy) return;
+    busy = true; sendBtn.disabled = true;
+    add('user', text);
+    input.value = '';
+    const thinking = add('bot', 'Thinking…', null);
+    thinking.classList.add('typing');
+    try {
+      const j = await api('/chat', { message: text, history: history.slice(-12) }, true);
+      thinking.classList.remove('typing');
+      thinking.textContent = j.reply || '(empty)';
+      history.push({ role: 'user', content: text }, { role: 'assistant', content: j.reply || '' });
+      if (j.tag) {
+        const t = document.createElement('div');
+        t.className = 'tag';
+        t.textContent = j.tag;
+        thinking.appendChild(document.createElement('br'));
+        thinking.appendChild(t);
+      }
+    } catch (e) {
+      thinking.classList.remove('typing');
+      if (e.status === 401) {
+        token = ''; localStorage.removeItem(TOKEN_KEY); setAuthed(false);
+        thinking.textContent = 'Session expired — re-enroll.';
+      } else {
+        thinking.textContent = 'Darwin is unreachable right now. Check your internet connection. (' + (e.message || 'error') + ')';
+      }
+    } finally {
+      busy = false; sendBtn.disabled = !token; log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const t = (input.value || '').trim();
+    if (!t || !token || busy) return;
+    doChat(t);
+  });
+  enrollBtn.addEventListener('click', doEnroll);
+  enrollCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') doEnroll(); });
+
+  // Install hint when not standalone
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (!standalone) installHint.classList.add('show');
+
+  // SW
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // Health + auth gate
+  fetch(API + '/health').then(r => r.json()).then(() => {
+    statusEl.textContent = token ? 'checking…' : 'locked';
+  }).catch(() => { statusEl.textContent = 'offline'; });
+
+  if (token) {
+    // soft-check: try a no-op by looking at health only; chat will 401 if bad
+    setAuthed(true);
+    add('sys', 'Welcome back. Chat is private to this enrolled device.');
+  } else {
+    setAuthed(false);
+  }
+})();
+</script>
+</body>
+</html>
