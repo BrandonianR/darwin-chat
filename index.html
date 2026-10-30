@@ -2,256 +2,442 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Darwin"/>
-<meta name="theme-color" content="#0b1218"/>
+<meta name="theme-color" content="#050505"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700&display=swap"/>
 <link rel="manifest" href="manifest.webmanifest"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"/>
 <link rel="icon" href="icon.svg" type="image/svg+xml"/>
 <title>Darwin</title>
 <style>
-  :root {
-    --bg: #0b1218; --panel: #121b24; --ink: #e8eef4; --muted: #8a9aab;
-    --gold: #c9a227; --gold-dim: #8a7018; --user: #1e3a4f; --bot: #162029;
-    --line: #243040; --danger: #c45c5c; --ok: #3d9a6a;
-    --safe-b: env(safe-area-inset-bottom, 0px);
-    --safe-t: env(safe-area-inset-top, 0px);
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; }
-  body { display: flex; flex-direction: column; padding-top: var(--safe-t); }
-  header {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-    border-bottom: 1px solid var(--line); background: var(--panel); flex-shrink: 0;
-  }
-  header .mark {
-    width: 36px; height: 36px; border-radius: 10px; background: #0d1520;
-    border: 1.5px solid var(--gold); display: grid; place-items: center;
-    color: var(--gold); font-family: Georgia, serif; font-weight: 700; font-size: 18px;
-  }
-  header h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.02em; }
-  header .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-  header .status { margin-left: auto; font-size: 11px; color: var(--muted); }
-  header .status.on { color: var(--ok); }
-  #log {
-    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 16px 14px 8px; display: flex; flex-direction: column; gap: 10px;
-  }
-  .msg { max-width: 88%; padding: 10px 14px; border-radius: 16px; line-height: 1.45; font-size: 15px;
-    white-space: pre-wrap; word-break: break-word; }
-  .msg.user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 4px; }
-  .msg.bot { align-self: flex-start; background: var(--bot); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-  .msg .tag {
-    display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px;
-    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
-    background: #0b1218; color: var(--gold); border: 1px solid var(--gold-dim);
-  }
-  .msg.sys { align-self: center; background: transparent; color: var(--muted); font-size: 12px; text-align: center; max-width: 95%; }
-  .typing { opacity: 0.7; font-style: italic; }
-  #composer {
-    display: flex; gap: 8px; padding: 10px 12px calc(10px + var(--safe-b));
-    border-top: 1px solid var(--line); background: var(--panel); flex-shrink: 0;
-  }
-  #composer input {
-    flex: 1; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
-    border-radius: 22px; padding: 12px 16px; font-size: 16px; outline: none;
-  }
-  #composer input:focus { border-color: var(--gold-dim); }
-  #composer button {
-    border: none; background: var(--gold); color: #0b1218; font-weight: 700;
-    border-radius: 22px; padding: 0 18px; font-size: 15px; min-width: 72px;
-  }
-  #composer button:disabled { opacity: 0.45; }
-  #enroll {
-    position: fixed; inset: 0; background: rgba(5,8,12,0.92); display: none;
-    align-items: center; justify-content: center; padding: 24px; z-index: 20;
-  }
-  #enroll.open { display: flex; }
-  #enroll .card {
-    width: 100%; max-width: 360px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: 18px; padding: 24px 20px; text-align: center;
-  }
-  #enroll h2 { margin: 0 0 6px; font-size: 20px; color: var(--gold); font-family: Georgia, serif; }
-  #enroll p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.4; }
-  #enroll input {
-    width: 100%; text-align: center; letter-spacing: 0.35em; font-size: 22px; font-weight: 700;
-    padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
-    text-transform: uppercase; margin-bottom: 12px;
-  }
-  #enroll button {
-    width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--gold);
-    color: #0b1218; font-weight: 700; font-size: 16px;
-  }
-  #enroll .err { color: var(--danger); font-size: 12px; min-height: 18px; margin-bottom: 8px; }
-  #install-hint {
-    display: none; margin: 0 14px 8px; padding: 10px 12px; border-radius: 12px;
-    background: #15202b; border: 1px dashed var(--gold-dim); color: var(--muted); font-size: 12px; line-height: 1.4;
-  }
-  #install-hint.show { display: block; }
+:root{--bg:#0d0d0e;--ink:#ececea;--ink2:#c9c8c3;--muted:#8a8984;--faint:#5c5b57;--line:rgba(255,255,255,.08);
+--pill:#1f1f21;--box:#18181a;--gold:#cfae5a;--gold2:#e6cf8f;--danger:#e57373;
+--serif:"Iowan Old Style","Palatino Linotype",Palatino,Charter,Georgia,serif;
+--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;padding:var(--st) var(--sr) 0 var(--sl)}
+button{font:inherit;color:inherit;cursor:pointer}
+header{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-shrink:0}
+header .name{font:500 17px var(--serif);letter-spacing:.01em}
+header .st{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:1px}
+header .st i{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+header .st.on i{background:#6fcf97}
+#newchat{margin-left:auto;width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;color:var(--ink2)}
+#newchat:active{background:var(--pill)}
+.mark{width:30px;height:30px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;
+border:1px solid rgba(207,174,90,.45);color:var(--gold);font:600 15px var(--serif);background:radial-gradient(circle at 50% 40%,rgba(207,174,90,.14),transparent 70%)}
+.mark.sm{width:26px;height:26px;font-size:13px}
+.mark.think{animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(207,174,90,.0);border-color:rgba(207,174,90,.45)}50%{box-shadow:0 0 0 6px rgba(207,174,90,.10),0 0 18px rgba(207,174,90,.25);border-color:var(--gold2)}}
+#install-hint{display:none;align-items:center;gap:8px;margin:0 16px 6px;padding:8px 8px 8px 12px;border-radius:12px;background:var(--box);border:1px solid var(--line);color:var(--muted);font-size:12.5px}
+#install-hint.show{display:flex}#install-hint span{flex:1}#install-hint b{color:var(--ink2);font-weight:600}
+#hint-x{border:0;background:transparent;color:var(--muted);font-size:18px;width:28px;height:28px}
+@media (display-mode:standalone){#install-hint{display:none!important}}
+#log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 18px 18px;display:flex;flex-direction:column;gap:22px}
+#empty{margin:auto 0;text-align:center;padding:20px 4px}
+#empty .mark{width:52px;height:52px;font-size:24px;margin:0 auto 18px}
+#empty h2{margin:0 0 26px;font:400 25px/1.3 var(--serif);color:var(--ink);letter-spacing:-.005em}
+#empty h2 em{font-style:normal;color:var(--gold2)}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left}
+.chip{border:1px solid var(--line);background:var(--box);border-radius:14px;padding:12px 13px;font-size:13.5px;line-height:1.35;color:var(--ink2)}
+.chip small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.chip:active{background:var(--pill)}
+.u{align-self:flex-end;max-width:84%;background:var(--pill);border-radius:20px;padding:10px 15px;font-size:15.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.b{display:flex;gap:12px;align-items:flex-start}
+.b .body{flex:1;min-width:0}
+.md{font:16.5px/1.62 var(--serif);color:var(--ink);word-wrap:break-word}
+.md>*:first-child{margin-top:2px}.md>*:last-child{margin-bottom:0}
+.md p{margin:0 0 .75em}.md h1,.md h2,.md h3,.md h4{font-family:var(--sans);font-weight:600;line-height:1.3;margin:1.1em 0 .45em}
+.md h1{font-size:19px}.md h2{font-size:17.5px}.md h3,.md h4{font-size:16px}
+.md ul,.md ol{margin:0 0 .8em;padding-left:1.35em}.md li{margin:.25em 0}.md li::marker{color:var(--muted)}
+.md strong{font-weight:650;color:#fff}.md a{color:var(--gold2);text-decoration:underline;text-underline-offset:2px}
+.md code{font:.86em var(--mono);background:#232325;border:1px solid var(--line);padding:.1em .35em;border-radius:5px}
+.md blockquote{margin:0 0 .8em;padding-left:12px;border-left:2px solid var(--gold);color:var(--ink2)}
+.md hr{border:0;border-top:1px solid var(--line);margin:1em 0}
+.md table{border-collapse:collapse;display:block;overflow-x:auto;margin:0 0 .8em;font:14px var(--sans)}
+.md th,.md td{border:1px solid var(--line);padding:6px 10px;text-align:left}.md th{background:var(--box);font-weight:600}
+.cb{margin:0 0 .9em;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#141416}
+.cb .h{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 6px 12px;font:11px var(--mono);color:var(--muted);background:#1b1b1d}
+.cb .h button{border:0;background:transparent;color:var(--muted);font-size:11.5px;padding:3px 6px}
+.cb pre{margin:0;padding:12px;overflow-x:auto;font:13px/1.5 var(--mono);color:#e4e4e0}
+.cb pre code{background:none;border:0;padding:0;font:inherit}
+.meta{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--faint);font-size:11.5px}
+.meta .tag{font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(207,174,90,.3);border-radius:5px;padding:1px 5px}
+.meta .ts{margin:0 6px 0 4px}
+.meta button{border:0;background:transparent;color:var(--muted);width:30px;height:28px;border-radius:8px;display:grid;place-items:center}
+.meta button:active{background:var(--pill)}
+.err{color:var(--danger);font:14px/1.5 var(--sans)}
+.dots{display:flex;gap:5px;padding:9px 0}.dots i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:dot 1.2s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.sysn{align-self:center;color:var(--muted);font-size:12px;text-align:center}
+#composer{flex-shrink:0;padding:6px 14px calc(10px + var(--sb))}
+.box{display:flex;align-items:flex-end;gap:8px;background:var(--box);border:1px solid rgba(255,255,255,.1);border-radius:26px;padding:8px 8px 8px 18px;box-shadow:0 -8px 30px rgba(0,0,0,.35);transition:border-color .2s}
+.box:focus-within{border-color:rgba(207,174,90,.35)}
+#input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:16px/1.45 var(--sans);resize:none;max-height:168px;padding:8px 0;height:39px}
+#input::placeholder{color:var(--faint)}
+#send{width:38px;height:38px;border-radius:50%;border:0;flex-shrink:0;display:grid;place-items:center;background:var(--ink);color:#111;transition:opacity .15s,background .15s}
+#send:disabled{opacity:.25}
+#send.stop{background:var(--ink)}
+.foot{text-align:center;color:var(--faint);font-size:10.5px;margin-top:7px}
+#enroll{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:var(--bg);padding:calc(24px + var(--st)) 28px calc(24px + var(--sb))}
+#enroll.open{display:flex}
+#enroll .card{width:100%;max-width:340px;text-align:center}
+#enroll .mark{width:64px;height:64px;font-size:30px;margin:0 auto 22px}
+#enroll h2{margin:0 0 8px;font:400 26px var(--serif)}
+#enroll p{margin:0 0 26px;color:var(--muted);font-size:14.5px;line-height:1.5}
+#enroll input{width:100%;text-align:center;font:500 22px var(--mono);letter-spacing:.42em;text-indent:.42em;padding:15px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:var(--box);color:var(--ink);outline:none;text-transform:uppercase;margin-bottom:12px}
+#enroll input:focus{border-color:rgba(207,174,90,.5)}
+#enroll input::placeholder{color:var(--faint)}
+#enroll button{width:100%;padding:15px;border:0;border-radius:14px;background:var(--gold);color:#17130a;font:600 16px var(--sans)}
+#enroll button:disabled{opacity:.5}
+#enroll .err{min-height:20px;margin-bottom:6px;font-size:13px}
+
+/* ---- v5 armed palette ---- */
+:root{--bg:#050505;--g1:#121417;--g2:#1c1f24;--g3:#2a2e35;--ink:#e4e4e7;--ink2:#c4c6cc;--muted:#8b8f98;--faint:#5a5e66;
+--line:rgba(255,255,255,.09);--red:#dc2626;--red2:#7f1d1d;--redg:rgba(220,38,38,.35);
+--disp:"Oxanium","Rajdhani","DIN Condensed","Arial Narrow",system-ui,sans-serif}
+html,body{background:var(--bg)}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+background:radial-gradient(700px 300px at 50% -10%,rgba(127,29,29,.22),transparent 70%),
+repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 4px),repeating-linear-gradient(-45deg,rgba(0,0,0,.35) 0 2px,transparent 2px 4px)}
+body::after{content:"";position:fixed;left:0;right:0;top:0;height:2px;z-index:0;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(220,38,38,.08),transparent);animation:scan 11s linear infinite}
+@keyframes scan{from{transform:translateY(-10px)}to{transform:translateY(100vh)}}
+header,#install-hint,#log,#composer{position:relative;z-index:1}
+header{border-bottom:1px solid var(--line);background:rgba(5,5,5,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+header .name{font:700 19px/1 var(--disp);letter-spacing:.22em;text-transform:uppercase;color:#f4f4f5}
+header .st{font:600 10px var(--disp);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+header .st.on i{background:var(--red);box-shadow:0 0 6px var(--red);animation:live 2.4s ease-in-out infinite}
+header .st.on{color:var(--ink2)}
+@keyframes live{50%{opacity:.35}}
+#newchat{border-radius:6px;background:var(--g1);border-color:var(--g3)}
+.mark{border:0;background:none;width:34px;height:34px;border-radius:0;box-shadow:none}
+.mark.sm{width:28px;height:28px}
+.mark svg{width:100%;height:100%;display:block;overflow:visible}
+.mark .ring{opacity:0;transform-box:view-box;transform-origin:50% 50%;transition:opacity .3s}
+.mark .core{transform-box:fill-box;transform-origin:center}
+.mark.think{animation:none}
+.mark.think .ring{opacity:1;animation:spin 3.2s linear infinite}
+.mark.think svg{animation:hb 1.6s ease-in-out infinite}
+.mark.think .core{animation:hbc 1.6s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes hb{0%,100%{filter:drop-shadow(0 0 2px rgba(220,38,38,.3))}15%{filter:drop-shadow(0 0 9px rgba(220,38,38,.85))}30%{filter:drop-shadow(0 0 3px rgba(220,38,38,.35))}45%{filter:drop-shadow(0 0 7px rgba(220,38,38,.7))}}
+@keyframes hbc{0%,100%{transform:scale(1)}15%{transform:scale(1.22)}30%{transform:scale(1)}45%{transform:scale(1.14)}}
+#install-hint{border-radius:6px;background:var(--g1);border-color:var(--g3);font-size:12px}
+#empty .mark{width:76px;height:76px;margin-bottom:22px}
+#empty .mark svg{filter:drop-shadow(0 0 10px rgba(220,38,38,.35))}
+#empty h2{font:600 26px/1.3 var(--disp);letter-spacing:.02em;color:#f4f4f5}
+#empty h2 em{color:var(--red);font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:19px;text-shadow:0 0 18px rgba(220,38,38,.35)}
+.chip{border-radius:4px;background:linear-gradient(180deg,var(--g2),var(--g1));border:1px solid var(--g3);border-left:2px solid #3a3f47;
+font:600 13px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:#e4e4e7;padding:13px 13px;transition:border-color .12s}
+.chip small{font:400 12px var(--sans);letter-spacing:0;text-transform:none;color:var(--muted);margin-top:3px}
+.chip:hover,.chip:active{border-color:rgba(220,38,38,.55);border-left-color:var(--red);box-shadow:0 0 14px rgba(220,38,38,.15)}
+.u{border-radius:4px;background:linear-gradient(180deg,var(--g2),var(--g1));border:1px solid var(--g3);border-left:2px solid var(--red);color:#ededf0}
+.md{font:16px/1.65 var(--sans);color:#d6d7db}
+.md h1,.md h2,.md h3,.md h4{font-family:var(--disp);letter-spacing:.06em;text-transform:uppercase;color:#f4f4f5}
+.md h1{font-size:17px}.md h2{font-size:16px}.md h3,.md h4{font-size:15px}
+.md strong{color:#fafafa}.md a{color:#f87171}.md li::marker{color:var(--red)}
+.md blockquote{border-left-color:var(--red)}
+.md code{background:var(--g2);border-color:var(--g3);border-radius:3px;color:#fca5a5}
+.md th{background:var(--g1)}
+.cb{border-radius:6px;background:#0b0c0e;border-color:var(--g3)}
+.cb .h{background:var(--g1);border-bottom:1px solid var(--g3);color:#f87171;text-transform:uppercase;letter-spacing:.1em}
+.cb .h button{color:var(--ink2)}
+.meta .tag{font:700 9.5px var(--disp);letter-spacing:.18em;color:#f87171;border:1px solid rgba(220,38,38,.45);background:rgba(127,29,29,.18);border-radius:2px;padding:2px 6px}
+.meta button{border-radius:4px}
+.dots i{background:var(--red);border-radius:1px;width:5px;height:5px}
+.box{border-radius:8px;background:linear-gradient(180deg,var(--g2),var(--g1));border:1px solid var(--g3);box-shadow:0 -10px 30px rgba(0,0,0,.6)}
+.box:focus-within{border-color:rgba(220,38,38,.6);box-shadow:0 0 0 1px rgba(220,38,38,.15),0 0 22px rgba(220,38,38,.18)}
+#send{border-radius:5px;background:linear-gradient(180deg,#ef4444,#b91c1c 60%,#7f1d1d);color:#fff;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:none}
+#send:disabled{opacity:1;background:var(--g3);color:var(--faint)}
+#send.stop{background:linear-gradient(180deg,#ef4444,#991b1b)}
+.foot{font:500 9.5px var(--disp);letter-spacing:.16em;text-transform:uppercase}
+#enroll{background:var(--bg)}
+#enroll::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(420px 360px at 50% 36%,rgba(127,29,29,.25),transparent 70%),repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px)}
+#enroll .card{position:relative;border:1px solid var(--g3);background:rgba(18,20,23,.85);border-radius:6px;padding:30px 22px 24px}
+#enroll .card::before{content:"";position:absolute;top:-1px;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+#enroll .mark{width:84px;height:84px;margin-bottom:20px}
+#enroll .mark svg{filter:drop-shadow(0 0 12px rgba(220,38,38,.45))}
+#enroll .k{font:700 10px var(--disp);letter-spacing:.3em;color:var(--red);margin-bottom:8px}
+#enroll h2{font:700 24px var(--disp);letter-spacing:.16em;text-transform:uppercase;color:#f4f4f5}
+#enroll p{color:var(--ink2)}
+#enroll input{border-radius:4px;background:#0b0c0e;border-color:var(--g3);color:#fecaca;font-weight:600}
+#enroll input:focus{border-color:var(--red);box-shadow:0 0 18px rgba(220,38,38,.2)}
+#enroll button{border-radius:4px;background:linear-gradient(180deg,#ef4444,#b91c1c 55%,#7f1d1d);color:#fff;font:700 14px var(--disp);letter-spacing:.3em;box-shadow:0 0 22px rgba(220,38,38,.25)}
+@media (prefers-reduced-motion:reduce){body::after{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <header>
-  <div class="mark">D</div>
-  <div>
-    <h1>Darwin</h1>
-    <div class="sub">Private chat · brain-tagged</div>
-  </div>
-  <div class="status" id="status">…</div>
+  <div class="mark" id="core" aria-hidden="true">D</div>
+  <div><div class="name">DARWIN</div><div class="st" id="stwrap"><i></i><span id="status">…</span></div></div>
+  <button id="newchat" type="button" aria-label="New chat" title="New chat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
 </header>
-<div id="install-hint">To install: Safari Share → <b>Add to Home Screen</b> → Add. Then open the Darwin icon.</div>
+<div id="install-hint"><span>Install: Share → <b>Add to Home Screen</b></span><button type="button" id="hint-x" aria-label="Dismiss">×</button></div>
 <div id="log" aria-live="polite"></div>
 <form id="composer" autocomplete="off">
-  <input id="input" type="text" enterkeyhint="send" placeholder="Ask Darwin…" maxlength="4000" disabled/>
-  <button type="submit" id="send" disabled>Send</button>
+  <div class="box">
+    <textarea id="input" rows="1" enterkeyhint="send" placeholder="Give Darwin an order…" maxlength="4000" disabled></textarea>
+    <button type="submit" id="send" aria-label="Send" disabled></button>
+  </div>
+  <div class="foot">Encrypted · Private to this device</div>
 </form>
-
 <div id="enroll">
   <div class="card">
-    <h2>D.A.R.W.I.N.</h2>
-    <p>Enter the one-time enroll code Brandon gave you. This device stays private — no open chat endpoint.</p>
+    <div class="mark" aria-hidden="true">D</div>
+    <div class="k">DARWIN · SECURE TERMINAL</div>
+    <h2>Access Restricted</h2>
+    <p>Identify yourself. Enter the code Brandon gave you.</p>
     <div class="err" id="enroll-err"></div>
-    <input id="enroll-code" inputmode="text" maxlength="8" placeholder="········" autocomplete="one-time-code"/>
-    <button type="button" id="enroll-btn">Enroll this iPhone</button>
+    <input id="enroll-code" inputmode="text" maxlength="8" placeholder="XXXXXXXX" autocomplete="one-time-code" spellcheck="false" autocapitalize="characters"/>
+    <button type="button" id="enroll-btn">AUTHORIZE</button>
   </div>
 </div>
-
 <script>
 (() => {
   const API = 'https://crgbnqdxlilslabyaugn.supabase.co/functions/v1/darwin-chat';
-  const history = [];
   const TOKEN_KEY = 'darwin_chat_session_v1';
-  const log = document.getElementById('log');
-  const input = document.getElementById('input');
-  const sendBtn = document.getElementById('send');
-  const form = document.getElementById('composer');
-  const statusEl = document.getElementById('status');
-  const enroll = document.getElementById('enroll');
-  const enrollErr = document.getElementById('enroll-err');
-  const enrollCode = document.getElementById('enroll-code');
-  const enrollBtn = document.getElementById('enroll-btn');
-  const installHint = document.getElementById('install-hint');
+  const THREAD_KEY = 'darwin_chat_thread_v1';
+  const HISTORY_MAX = 40; // 20 turns
+  const $ = (id) => document.getElementById(id);
+  const log = $('log'), input = $('input'), sendBtn = $('send'), form = $('composer'), statusEl = $('status'), stwrap = $('stwrap');
+  const enroll = $('enroll'), enrollErr = $('enroll-err'), enrollCode = $('enroll-code'), enrollBtn = $('enroll-btn');
+  const installHint = $('install-hint'), core = $('core');
+  const EYE = '<svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b7079"/><stop offset="1" stop-color="#2a2e35"/></linearGradient><radialGradient id="dcr"><stop offset="0" stop-color="#ffe4e4"/><stop offset=".25" stop-color="#ff4d4d"/><stop offset=".6" stop-color="#dc2626"/><stop offset="1" stop-color="#7f1d1d"/></radialGradient></defs><g class="ring"><circle cx="50" cy="50" r="48" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-dasharray="9 6"/></g><polygon points="50,8 86.4,29 86.4,71 50,92 13.6,71 13.6,29" fill="#0b0c0e" stroke="url(#dst)" stroke-width="4"/><polygon points="50,22 74.2,36 74.2,64 50,78 25.8,64 25.8,36" fill="none" stroke="#3a1414" stroke-width="1.5"/><circle class="core" cx="50" cy="50" r="13" fill="url(#dcr)"/><circle cx="46" cy="46" r="3" fill="#fff" opacity=".7"/></svg>';
+  document.querySelectorAll('.mark').forEach((m) => { m.innerHTML = EYE; });
+  const ICON_SEND = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  const ICON_STOP = '<svg width="14" height="14" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="currentColor"/></svg>';
+  const ICON_COPY = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  const ICON_OK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  const ICON_REGEN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>';
 
   let token = localStorage.getItem(TOKEN_KEY) || '';
-  let busy = false;
+  let busy = false, ctrl = null;
+  let thread = [];
+  try { thread = JSON.parse(localStorage.getItem(THREAD_KEY) || '[]'); if (!Array.isArray(thread)) thread = []; } catch (_) { thread = []; }
+  const save = () => { try { localStorage.setItem(THREAD_KEY, JSON.stringify(thread.slice(-200))); } catch (_) {} };
 
-  function add(role, text, tag) {
-    const d = document.createElement('div');
-    d.className = 'msg ' + role;
-    d.textContent = text;
-    if (tag) {
-      const t = document.createElement('div');
-      t.className = 'tag';
-      t.textContent = tag;
-      d.appendChild(document.createElement('br'));
-      d.appendChild(t);
+  // ---------- safe markdown ----------
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  function inline(s) {
+    const codes = [];
+    s = s.replace(/`([^`\n]+)`/g, (_, c) => { codes.push(c); return '\u0000' + (codes.length - 1) + '\u0000'; });
+    s = esc(s);
+    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, t, u) => {
+      const raw = u.replace(/&amp;/g, '&');
+      if (!/^(https?:|mailto:)/i.test(raw)) return t;
+      return '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + t + '</a>';
+    });
+    s = s.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<em>$2</em>').replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, '$1<em>$2</em>');
+    s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    return s.replace(/\u0000(\d+)\u0000/g, (_, i) => '<code>' + esc(codes[+i]) + '</code>');
+  }
+  function md(src) {
+    const lines = String(src || '').replace(/\r/g, '').split('\n');
+    let out = '', i = 0, para = [];
+    const flush = () => { if (para.length) { out += '<p>' + para.map(inline).join('<br>') + '</p>'; para = []; } };
+    const row = (l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+    while (i < lines.length) {
+      const l = lines[i];
+      let m;
+      if ((m = /^\s*```\s*([\w+-]*)/.exec(l))) {
+        flush(); const lang = m[1]; const buf = []; i++;
+        while (i < lines.length && !/^\s*```/.test(lines[i])) buf.push(lines[i++]);
+        i++;
+        out += '<div class="cb"><div class="h"><span>' + esc(lang || 'code') + '</span><button type="button" data-copy>Copy</button></div><pre><code>' + esc(buf.join('\n')) + '</code></pre></div>';
+        continue;
+      }
+      if (!l.trim()) { flush(); i++; continue; }
+      if ((m = /^(#{1,4})\s+(.*)$/.exec(l))) { flush(); const n = m[1].length; out += '<h' + n + '>' + inline(m[2]) + '</h' + n + '>'; i++; continue; }
+      if (/^\s*([-*_])\s*\1\s*\1[\s\1]*$/.test(l)) { flush(); out += '<hr>'; i++; continue; }
+      if (/^\s*\|.*\|\s*$/.test(l) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+        flush(); const hd = row(l); i += 2; let t = '<table><thead><tr>' + hd.map((c) => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>';
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { t += '<tr>' + row(lines[i]).map((c) => '<td>' + inline(c) + '</td>').join('') + '</tr>'; i++; }
+        out += t + '</tbody></table>'; continue;
+      }
+      if (/^\s*>/.test(l)) { flush(); const buf = []; while (i < lines.length && /^\s*>/.test(lines[i])) buf.push(lines[i++].replace(/^\s*>\s?/, '')); out += '<blockquote>' + md(buf.join('\n')) + '</blockquote>'; continue; }
+      if (/^\s*([-*+]|\d+[.)])\s+/.test(l)) {
+        flush(); const ordered = /^\s*\d/.test(l); const tag = ordered ? 'ol' : 'ul'; let html = '<' + tag + '>'; let cur = null;
+        while (i < lines.length) {
+          const x = lines[i];
+          if ((m = /^\s*([-*+]|\d+[.)])\s+(.*)$/.exec(x)) && (/^\s{0,1}\S/.test(x) || cur === null)) { if (cur !== null) html += '<li>' + cur + '</li>'; cur = inline(m[2]); i++; }
+          else if ((m = /^\s{2,}([-*+]|\d+[.)])\s+(.*)$/.exec(x))) { cur += '<ul><li>' + inline(m[2]) + '</li></ul>'; cur = cur.replace(/<\/ul><ul>/g, ''); i++; }
+          else if (x.trim() && /^\s{2,}/.test(x)) { cur += '<br>' + inline(x.trim()); i++; }
+          else if (!x.trim() && i + 1 < lines.length && /^\s*([-*+]|\d+[.)])\s+/.test(lines[i + 1])) { i++; }
+          else break;
+        }
+        if (cur !== null) html += '<li>' + cur + '</li>';
+        out += html + '</' + tag + '>'; continue;
+      }
+      para.push(l.trim()); i++;
     }
-    log.appendChild(d);
-    log.scrollTop = log.scrollHeight;
-    return d;
+    flush(); return out;
   }
 
+  // ---------- rendering ----------
+  const hour = () => new Date().getHours();
+  function greeting() { const h = hour(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+  const CHIPS = [['Run a briefing', 'on anything you name'], ['Analyze anything', 'data, text, or a decision'], ['Draft a message', 'precise and persuasive'], ['Plan my day', 'ruthlessly efficient']];
+  const fmtTime = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const scroll = () => { log.scrollTop = log.scrollHeight; };
+
+  function renderEmpty() {
+    const e = document.createElement('div'); e.id = 'empty';
+    e.innerHTML = '<div class="mark" aria-hidden="true">' + EYE + '</div><h2>' + greeting() + ', sir.<br><em>What do you require?</em></h2><div class="chips"></div>';
+    const c = e.querySelector('.chips');
+    CHIPS.forEach(([a, b]) => { const x = document.createElement('button'); x.type = 'button'; x.className = 'chip'; x.innerHTML = esc(a) + '<small>' + esc(b) + '</small>'; x.dataset.q = a + ': ' + b;
+      x.onclick = () => { if (!token || busy) return; doChat(a + ' ' + b); }; c.appendChild(x); });
+    log.appendChild(e);
+  }
+  function userEl(text) { const d = document.createElement('div'); d.className = 'u'; d.textContent = text; return d; }
+  function botShell() {
+    const d = document.createElement('div'); d.className = 'b';
+    d.innerHTML = '<div class="mark sm" aria-hidden="true">' + EYE + '</div><div class="body"></div>'; return d;
+  }
+  function fillBot(d, m, isLast) {
+    const body = d.querySelector('.body');
+    if (m.error) { body.innerHTML = '<div class="err"></div>'; body.firstChild.textContent = m.content; }
+    else body.innerHTML = '<div class="md">' + md(m.content || '(empty)') + '</div>';
+    const meta = document.createElement('div'); meta.className = 'meta';
+    if (m.tag) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = m.tag; meta.appendChild(t); }
+    if (m.ts) { const s = document.createElement('span'); s.className = 'ts'; s.textContent = fmtTime(m.ts); meta.appendChild(s); }
+    if (!m.error) { const cp = document.createElement('button'); cp.type = 'button'; cp.setAttribute('aria-label', 'Copy reply'); cp.innerHTML = ICON_COPY;
+      cp.onclick = () => copyText(m.content, cp, ICON_COPY); meta.appendChild(cp); }
+    if (isLast) { const rg = document.createElement('button'); rg.type = 'button'; rg.className = 'regen'; rg.setAttribute('aria-label', 'Regenerate'); rg.innerHTML = ICON_REGEN;
+      rg.onclick = regenerate; meta.appendChild(rg); }
+    body.appendChild(meta);
+  }
+  function render() {
+    log.innerHTML = '';
+    if (!thread.length) { renderEmpty(); return; }
+    const lastBot = thread.map((m) => m.role).lastIndexOf('assistant');
+    thread.forEach((m, idx) => {
+      if (m.role === 'user') log.appendChild(userEl(m.content));
+      else if (m.role === 'assistant') { const d = botShell(); fillBot(d, m, idx === lastBot && idx === thread.length - 1); log.appendChild(d); }
+      else { const s = document.createElement('div'); s.className = 'sysn'; s.textContent = m.content; log.appendChild(s); }
+    });
+    scroll();
+  }
+  async function copyText(text, btn, icon) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (__) {} ta.remove(); }
+    if (btn) { const old = btn.innerHTML; btn.innerHTML = icon ? ICON_OK : 'Copied'; setTimeout(() => { btn.innerHTML = old; }, 1400); }
+  }
+  log.addEventListener('click', (e) => { const b = e.target.closest('[data-copy]'); if (b) copyText(b.closest('.cb').querySelector('code').textContent, b); });
+
+  // ---------- auth + api (unchanged contract) ----------
   function setAuthed(ok) {
     input.disabled = !ok;
-    sendBtn.disabled = !ok;
-    statusEl.textContent = ok ? 'enrolled' : 'locked';
-    statusEl.classList.toggle('on', ok);
+    statusEl.textContent = ok ? 'Online \u00b7 All systems armed' : 'Locked';
+    stwrap.classList.toggle('on', ok);
     enroll.classList.toggle('open', !ok);
-    if (ok) input.focus();
+    updateSend();
   }
-
-  async function api(path, body, auth) {
+  async function api(path, body, auth, signal) {
     const headers = { 'Content-Type': 'application/json' };
     if (auth && token) headers['Authorization'] = 'Bearer ' + token;
-    const r = await fetch(API + path, { method: 'POST', headers, body: JSON.stringify(body || {}) });
+    const r = await fetch(API + path, { method: 'POST', headers, body: JSON.stringify(body || {}), signal });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw Object.assign(new Error(j.error || ('http_' + r.status)), { status: r.status, body: j });
     return j;
   }
-
   async function doEnroll() {
     enrollErr.textContent = '';
     const code = (enrollCode.value || '').trim().toUpperCase();
-    if (!/^[A-F0-9]{8}$/.test(code)) { enrollErr.textContent = 'Code is 8 hex characters.'; return; }
+    if (!/^[A-F0-9]{8}$/.test(code)) { enrollErr.textContent = 'The code is 8 characters (0\u20139, A\u2013F).'; return; }
     enrollBtn.disabled = true;
     try {
       const j = await api('/enroll', { code, deviceLabel: 'iphone-14-pro-max' }, false);
       token = j.token;
       localStorage.setItem(TOKEN_KEY, token);
-      setAuthed(true);
-      add('sys', 'Device enrolled. Ask Darwin anything. Answers are tagged cloud.');
+      setAuthed(true); render(); input.focus();
     } catch (e) {
-      enrollErr.textContent = e.status === 401 ? 'Wrong code.' : (e.message || 'Enroll failed');
-    } finally {
-      enrollBtn.disabled = false;
-    }
+      enrollErr.textContent = e.status === 401 ? 'That code isn\u2019t right.' : (e.message || 'Enroll failed');
+    } finally { enrollBtn.disabled = false; }
   }
 
-  async function doChat(text) {
-    if (busy) return;
-    busy = true; sendBtn.disabled = true;
-    add('user', text);
-    input.value = '';
-    const thinking = add('bot', 'Thinking…', null);
-    thinking.classList.add('typing');
+  function historyFor(upto) {
+    return thread.slice(0, upto).filter((m) => (m.role === 'user' || m.role === 'assistant') && !m.error)
+      .map((m) => ({ role: m.role, content: m.content })).slice(-HISTORY_MAX);
+  }
+  function updateSend() {
+    if (busy) { sendBtn.disabled = false; sendBtn.classList.add('stop'); sendBtn.innerHTML = ICON_STOP; sendBtn.setAttribute('aria-label', 'Stop'); return; }
+    sendBtn.classList.remove('stop'); sendBtn.innerHTML = ICON_SEND; sendBtn.setAttribute('aria-label', 'Send');
+    sendBtn.disabled = !token || !input.value.trim();
+  }
+  async function ask(text, histUpto) {
+    busy = true; ctrl = new AbortController(); updateSend(); core.classList.add('think');
+    const shell = botShell(); shell.querySelector('.mark').classList.add('think');
+    shell.querySelector('.body').innerHTML = '<div class="dots" aria-label="Thinking\u2026"><i></i><i></i><i></i></div>';
+    log.appendChild(shell); scroll();
+    let msg;
     try {
-      const j = await api('/chat', { message: text, history: history.slice(-12) }, true);
-      thinking.classList.remove('typing');
-      thinking.textContent = j.reply || '(empty)';
-      history.push({ role: 'user', content: text }, { role: 'assistant', content: j.reply || '' });
-      if (j.tag) {
-        const t = document.createElement('div');
-        t.className = 'tag';
-        t.textContent = j.tag;
-        thinking.appendChild(document.createElement('br'));
-        thinking.appendChild(t);
-      }
+      const j = await api('/chat', { message: text, history: historyFor(histUpto) }, true, ctrl.signal);
+      msg = { role: 'assistant', content: j.reply || '', tag: j.tag || '', ts: Date.now() };
     } catch (e) {
-      thinking.classList.remove('typing');
-      if (e.status === 401) {
-        token = ''; localStorage.removeItem(TOKEN_KEY); setAuthed(false);
-        thinking.textContent = 'Session expired — re-enroll.';
-      } else {
-        thinking.textContent = 'Darwin is unreachable right now. Check your internet connection. (' + (e.message || 'error') + ')';
-      }
+      if (e.name === 'AbortError') msg = { role: 'assistant', content: 'Stopped.', error: true, ts: Date.now() };
+      else if (e.status === 401) { token = ''; localStorage.removeItem(TOKEN_KEY); setAuthed(false); msg = { role: 'assistant', content: 'Session expired \u2014 please re-enroll.', error: true, ts: Date.now() }; }
+      else msg = { role: 'assistant', content: 'Darwin is unreachable right now. Check your internet connection. (' + (e.message || 'error') + ')', error: true, ts: Date.now() };
     } finally {
-      busy = false; sendBtn.disabled = !token; log.scrollTop = log.scrollHeight;
+      busy = false; ctrl = null; core.classList.remove('think');
     }
+    thread.push(msg); save(); render(); updateSend();
+  }
+  function doChat(text) {
+    if (busy) return;
+    if (!thread.length) log.innerHTML = '';
+    thread.push({ role: 'user', content: text, ts: Date.now() }); save();
+    log.appendChild(userEl(text)); log.querySelectorAll('.regen').forEach((b) => b.remove());
+    input.value = ''; autosize();
+    ask(text, thread.length - 1);
+  }
+  function regenerate() {
+    if (busy || !token) return;
+    if (thread.length && thread[thread.length - 1].role === 'assistant') thread.pop();
+    const last = thread[thread.length - 1];
+    if (!last || last.role !== 'user') return;
+    save(); render(); ask(last.content, thread.length - 1);
   }
 
+  function autosize() { input.style.height = '39px'; input.style.height = Math.min(input.scrollHeight, 168) + 'px'; updateSend(); }
+  input.addEventListener('input', autosize);
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !coarse) { e.preventDefault(); form.requestSubmit(); }
+  });
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
+    if (busy) { if (ctrl) ctrl.abort(); return; }
     const t = (input.value || '').trim();
-    if (!t || !token || busy) return;
+    if (!t || !token) return;
     doChat(t);
   });
+  $('newchat').addEventListener('click', () => { if (ctrl) ctrl.abort(); thread = []; save(); render(); input.value = ''; autosize(); });
   enrollBtn.addEventListener('click', doEnroll);
   enrollCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') doEnroll(); });
 
-  // Install hint when not standalone
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (!standalone) installHint.classList.add('show');
+  let hintOff = false; try { hintOff = localStorage.getItem('darwin_hint_dismissed') === '1'; } catch (_) {}
+  if (!standalone && !hintOff) installHint.classList.add('show');
+  $('hint-x').addEventListener('click', () => { installHint.classList.remove('show'); try { localStorage.setItem('darwin_hint_dismissed', '1'); } catch (_) {} });
 
-  // SW
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  fetch(API + '/health').then((r) => r.json()).then(() => { if (!token) statusEl.textContent = 'Locked'; })
+    .catch(() => { statusEl.textContent = 'Offline'; stwrap.classList.remove('on'); });
 
-  // Health + auth gate
-  fetch(API + '/health').then(r => r.json()).then(() => {
-    statusEl.textContent = token ? 'checking…' : 'locked';
-  }).catch(() => { statusEl.textContent = 'offline'; });
-
-  if (token) {
-    // soft-check: try a no-op by looking at health only; chat will 401 if bad
-    setAuthed(true);
-    add('sys', 'Welcome back. Chat is private to this enrolled device.');
-  } else {
-    setAuthed(false);
-  }
+  setAuthed(!!token);
+  render();
 })();
 </script>
 </body>
